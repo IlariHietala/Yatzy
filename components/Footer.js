@@ -1,11 +1,11 @@
 import React from 'react'
 import { Text, View } from 'react-native'
-import styles from '../style/style'
+import Footerstyles from '../style/Footerstyles'
 
-export default function Footer() {
+export default Footer = () => {
   return (
-    <View style={styles.footer}>
-      <Text style={styles.author}>
+    <View style={Footerstyles.footer}>
+      <Text style={Footerstyles.author}>
         Author: Ilari Hietala
       </Text>
     </View>

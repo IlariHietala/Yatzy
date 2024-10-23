@@ -1,11 +1,12 @@
 import React from 'react'
 import { Text, View } from 'react-native'
-import styles from '../style/style'
+import Headerstyles from '../style/Headerstyles'
 
-export default function Header() {
+
+export default Header = () => {
   return (
-    <View style={styles.header}>
-      <Text style={styles.title}>
+    <View style={Headerstyles.header}>
+      <Text style={Headerstyles.title}>
         Noppapeli
       </Text>
     </View>
