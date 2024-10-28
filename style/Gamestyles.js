@@ -1,15 +1,29 @@
 import { StyleSheet } from 'react-native';
 
 export default StyleSheet.create({
+    container: {
+        flex: 1,
+        marginHorizontal: 5,
+    },
+    starticon: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
 
-    icon:{
+    icon: {
         fontSize: 35,
     },
-    points:{
+    icon2: {
+        fontSize: 45,
+    },
+    points: {
         fontSize: 20,
         marginLeft: 8
     },
-    button:{
+    icons: {
+        marginBottom: 40,
+    },
+    button: {
         backgroundColor: 'green',
         padding: 10,
         borderRadius: 5,
@@ -17,7 +31,23 @@ export default StyleSheet.create({
         justifyContent: 'center',
         margin: 10
     },
-    buttontext:{
+    buttontext: {
         fontSize: 24,
-    }
+    },
+    infotext: {
+        fontSize: 16,
+    },
+    infotext2: {
+        fontWeight: 'bold',
+        fontSize: 20,
+    },
+    pointtext: {
+        fontSize: 16,
+        fontWeight:'bold'
+    },
+    pointtext2: {
+        fontSize: 20,
+        fontWeight:'bold',
+        marginBottom: 20,
+    },
 });

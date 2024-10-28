@@ -30,7 +30,7 @@ export default function Scoreboard() {
         const tmpScores = JSON.parse(jsonValue); // Oikea tapa jäsentää JSON
         // Lajittelu pistemäärän perusteella
         if (Array.isArray(tmpScores)) {
-          tmpScores.sort((a, b) => b.points - a.points);
+          tmpScores.sort((a, b) => b.points - a.totalPoints);
           setScores(tmpScores);
           console.log('async getScoreBoardData toimii');
           console.log('Scores:', tmpScores.length);
@@ -59,9 +59,13 @@ export default function Scoreboard() {
   return (
     <>
       <Header />
-      <FlatList
+      <View>
+      <Pressable style={Scorestyles.button} onPress={clearScoreboard}>
+              <Text>Tyhjennä lista</Text>
+            </Pressable>
+            <FlatList
         data={scores}
-        keyExtractor={(item, index) => index.toString()} // Ainakin yksilöi avaimet
+        keyExtractor={(item, index) => index.toString()} // Voit käyttää item.key, jos se on ainutlaatuinen
         renderItem={({ item }) => (
           <View>
             <Text>Nimi: {item.name}</Text>
@@ -71,7 +75,8 @@ export default function Scoreboard() {
           </View>
         )}
       />
+      </View>
       <Footer />
     </>
-  );
+  )
 }

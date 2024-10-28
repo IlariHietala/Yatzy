@@ -31,7 +31,7 @@ export default Home = ({ navigation }) => {
     return (
         <>
             <Header />
-            <View style={Homestyles.icon}>
+            <View style={Homestyles.container}>
                 <MaterialCommunityIcons name="information" size={90} color={'green'} />
                 {!hasPlayerName ?
                     <>
@@ -46,31 +46,25 @@ export default Home = ({ navigation }) => {
                     :
                     <>
                         <Text style={Homestyles.rules}>Rules of the Game</Text>
-                        <Text multiline="true">
-                            THE GAME: Upper section of the classic Yahtzee
-                            dice game. You have {NBR_OF_DICES} dices and
-                            for the every dice you have {NBR_OF_THROWS}
-                            throws. After each throw you can keep dices in
-                            order to get same dice spot counts as many as
-                            possible. In the end of the turn you must select
-                            your points from {MIN_SPOT} to {MAX_SPOT}.
-                            Game ends when all points have been selected.
-                            The order for selecting those is free.
-                            POINTS: After each turn game calculates the sum
-                            for the dices you selected. Only the dices having
-                            the same spot count are calculated. Inside the
-                            game you can not select same points from
-                            {MIN_SPOT} to {MAX_SPOT} again.
-                            GOAL: To get points as much as possible.
-                            {BONUS_POINTS_LIMIT} points is the limit of
-                            getting bonus which gives you {BONUS_POINTS}
-                            points more.
+                        <Text style={Homestyles.mainText}>
+                            <Text style={Homestyles.boldText}>THE GAME:</Text> Upper section of the classic Yahtzee
+                            dice game. You have <Text style={Homestyles.highlight}>{NBR_OF_DICES}</Text> dices and
+                            for every dice you have <Text style={Homestyles.highlight}>{NBR_OF_THROWS}</Text> throws.
+                            After each throw you can keep dices in order to get same dice spot counts as many as
+                            possible. In the end of the turn you must select your points from <Text style={Homestyles.highlight}>{MIN_SPOT}</Text> to <Text style={Homestyles.highlight}>{MAX_SPOT}</Text>.
+                            Game ends when all points have been selected. The order for selecting those is free.
+                            {'\n'}<Text style={Homestyles.boldText}>POINTS:</Text> After each turn game calculates the sum
+                            for the dices you selected. Only the dices having the same spot count are calculated. Inside the
+                            game you can not select same points from <Text style={Homestyles.highlight}>{MIN_SPOT}</Text> to <Text style={Homestyles.highlight}>{MAX_SPOT}</Text> again.
+                            {'\n'}<Text style={Homestyles.boldText}>GOAL:</Text> To get points as much as possible.
+                            <Text style={Homestyles.highlight}>{BONUS_POINTS_LIMIT}</Text> points is the limit of
+                            getting bonus which gives you <Text style={Homestyles.highlight}>{BONUS_POINTS}</Text> points more.
                         </Text>
-                        <Text> Go to hell, {playerName}</Text>
+                        <Text style={Homestyles.goodLuckText}>Good luck, {playerName}!</Text>
                         <Pressable
-                            onPress={() => navigation.navigate('Gameboard', {player: playerName})}
-                            style={{ padding: 10, backgroundColor: '#49ac7d' }}>
-                            <Text>PLAY</Text>
+                            onPress={() => navigation.navigate('Gameboard', { player: playerName })}
+                            style={Homestyles.button}>
+                            <Text style={Homestyles.buttontext}>PLAY</Text>
                         </Pressable>
                     </>}
             </View>
