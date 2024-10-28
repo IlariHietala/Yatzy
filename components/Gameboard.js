@@ -15,6 +15,8 @@ import {
 } from '../constants/Game.js';
 import Gamestyles from '../style/Gamestyles';
 import { Container, Row, Col } from 'react-native-flex-grid';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 let board = [];
 
@@ -25,26 +27,24 @@ export default Gameboard = ({ navigation, route }) => {
   const [status, setStatus] = useState('Throw dices.');
   const [hasGameEnded, setHasGameEnded] = useState(false);
   const [playerName, setPlayerName] = useState('');
-  // Mitkä nopat heitetty?
-  const [selectedDices, setSelectedDices] =
-    useState(new Array(NBR_OF_DICES).fill(false))
-  // Silmäluvut
-  const [diceSpots, setDiceSpots] =
-    useState(new Array(NBR_OF_DICES).fill(0));
-  // Mitkä nopat valittu pisteisiin?
-  const [selectedDicePoints, setSelectedDicePoints] =
-    useState(new Array(MAX_SPOT).fill(0));
-  // Valittujen noppien pistemäärä total
-  const [dicePointsTotal, setDicePointsTotal] =
-    useState(new Array(MAX_SPOT).fill(0));
+  const [selectedDices, setSelectedDices] = useState(new Array(NBR_OF_DICES).fill(false)) // Mitkä nopat heitetty?
+  const [diceSpots, setDiceSpots] = useState(new Array(NBR_OF_DICES).fill(0));   // Silmäluvut
+  const [selectedDicePoints, setSelectedDicePoints] = useState(new Array(MAX_SPOT).fill(0));   // Mitkä nopat valittu pisteisiin?
+  const [dicePointsTotal, setDicePointsTotal] = useState(new Array(MAX_SPOT).fill(0));   // Valittujen noppien pistemäärä total
   const [scores, setScores] = useState([]);
+  const [bestScore, setBestScore] = useState(0);
+  const [bonus, setBonus] = useState(false);
+  const [ogPoints, setOgPoints] = useState(0);
+  const [totalPoints, setTotalPoints] = useState(0);
 
+  //Noppien reset
   const resetDices = () => {
     setSelectedDices(new Array(NBR_OF_DICES).fill(false));
   }
 
+  //Uusi peli
   const startNewGame = () => {
-    setNbrOfThrowsLeft(3);
+    setNbrOfThrowsLeft(NBR_OF_THROWS);
     setStatus('');
     setHasGameEnded(false);
     setSelectedDices(new Array(NBR_OF_DICES).fill(false)); // Nollaa valitut nopat
@@ -53,26 +53,35 @@ export default Gameboard = ({ navigation, route }) => {
     setDicePointsTotal(new Array(MAX_SPOT).fill(0)); // Nollaa pistemäärät
   }
 
-  // pisteiden tallennus
+
+  // Pisteiden tallennus
   const savePlayerPoints = async () => {
-    const newKey = scores.length + 1;
+    const newKey = Date.now();
     const playerPoints = {
       key: newKey,
       name: playerName,
-      date: 'date',
-      time: 'time',
-      points: 0
-    }
+      date: new Date().toLocaleDateString(),
+      time: new Date().toLocaleTimeString(),
+      points: totalPoints
+    };
+
     try {
-      const newScore = [...scores, playerPoints];
-      const jsonValue = JSON.stringify(newScore);
-      await AsyncStorage.setItem(SCOREBOARD_KEY, jsonValue);
-      console.log('Gameboard: Save successful: ' + jsonValue)
+      const jsonValue = await AsyncStorage.getItem(SCOREBOARD_KEY);
+      const existingScores = jsonValue !== null ? JSON.parse(jsonValue) : [];
+      const newScore = [...existingScores, playerPoints];
+
+      await AsyncStorage.setItem(SCOREBOARD_KEY, JSON.stringify(newScore));
+      setScores(newScore);
+
+      // Hae paras pistemäärä uudelleen nyt tallennettujen pisteiden joukosta
+      const bestScore = getBestScore(newScore);
+      setBestScore(bestScore); // Aseta paras pistemäärä UI:lle
+      console.log('Gameboard: Save successful:', JSON.stringify(newScore));
+    } catch (e) {
+      console.log('Gameboard: save error:', e);
     }
-    catch (e) {
-      console.log('Gameboard: save error: ' + e)
-    }
-  }
+  };
+
 
   // Luodaan nopparivi sarakkeittain (col)
   const dicesRow = [];
@@ -112,7 +121,7 @@ export default Gameboard = ({ navigation, route }) => {
       <Col key={"buttonsRow" + diceButton}>
         <Pressable
           key={"buttonsRow" + diceButton}
-          onPress={() => chosenDicePoints(diceButton)}>
+          onPress={() => { chosenDicePoints(diceButton); setStatus('Throw dices!'); }}>
           <MaterialCommunityIcons
             name={"numeric-" + (diceButton + 1) + "-circle"}
             key={"buttonsRow" + diceButton}
@@ -143,23 +152,32 @@ export default Gameboard = ({ navigation, route }) => {
   const getScoreBoardData = async () => {
     try {
       const jsonValue = await AsyncStorage.getItem(SCOREBOARD_KEY);
+      console.log('Tallennetut tiedot:', jsonValue); // Lisää tämä rivi
+
       if (jsonValue !== null) {
-        const tmpScores = JSON - parseFloat(jsonValue);
-        //Lajittelu pistemäärän perusteella!
-        tmpScores.sort((a, b) => b.points - a.points);
-        setScores(tmpScores)
-        console.log('async getscoreboardData toimii')
-        console.log('GAMEBOARD: Scores:' + tmpScores.length)
+        const tmpScores = JSON.parse(jsonValue);
+        console.log('Tulokset:', tmpScores); // Tulosta taulukko
+
+        if (Array.isArray(tmpScores) && tmpScores.length > 0) {
+          const bestScore = getBestScore(tmpScores);
+          console.log('Asetetaan paras pistemäärä:', bestScore); // Tulosta paras pistemäärä
+          setBestScore(bestScore);
+        }
+      } else {
+        console.log('Ei tallennettuja tietoja löytynyt.');
       }
+    } catch (e) {
+      console.log('Virhe @GAMEBOARD.js async:', e.message || e); // Tulosta virheen viesti
     }
-    catch (e) {
-      console.log('Error @GAMEBOARD.js async');
-    }
-  }
+  };
+
 
   // Valitun nopan värimuunnos
   function getDiceColor(i) {
-    return selectedDices[i] ? "black" : "green";
+    if (hasGameEnded || nbrOfThrowsLeft === NBR_OF_THROWS) {
+      return '#6b6b6b';
+    }
+    return selectedDices[i] ? '#1e4d15' : "green";
   }
 
   function getDicePointsColor(i) {
@@ -182,7 +200,7 @@ export default Gameboard = ({ navigation, route }) => {
     }
   }
 
-  useEffect (() => {
+  useEffect(() => {
     if (nbrOfThrowsLeft === 0) {
       setThrowsLeft(false);
     } else {
@@ -193,13 +211,14 @@ export default Gameboard = ({ navigation, route }) => {
   useEffect(() => {
     // Tarkistetaan, ovatko kaikki lohkot täytetty
     const allPointsSelected = selectedDicePoints.every(point => point === true);
-    
+
     if (allPointsSelected) {
       setHasGameEnded(true);  // Peli päättyy
       setStatus("Peli on päättynyt. Kaikki pisteet asetettu!");
+
     }
   }, [selectedDicePoints]);  // Tämä useEffect käynnistyy aina, kun selectedDicePoints muuttuu
-  
+
 
   // Noppien heitto
   const throwDices = () => {
@@ -213,14 +232,19 @@ export default Gameboard = ({ navigation, route }) => {
     for (let i = 0; i < NBR_OF_DICES; i++) {
       if (!selectedDices[i]) {
         let randomNumber = Math.floor(Math.random() * 6 + 1);
-        board[i] = 'dice-' + randomNumber
+        board[i] = 'dice-' + randomNumber;
         spots[i] = randomNumber;
       }
     }
     setNbrOfThrowsLeft(nbrOfThrowsLeft - 1);
     setDiceSpots(spots);
-    setStatus('Select and throw dices again.')
-  }
+
+    if (nbrOfThrowsLeft - 1 > 0) {
+      setStatus('Select and throw dices again.');
+    } else {
+      setStatus("No throws left. Select points."); // Jos heittoja ei enää ole, asetetaan tämä viesti
+    }
+  };
 
   // Heittoja jäljellä + pistelasku
   const chosenDicePoints = (i) => {
@@ -232,8 +256,7 @@ export default Gameboard = ({ navigation, route }) => {
         let nbrOfDices =
           diceSpots.reduce((total, x) => (x === (i + 1) ? total + 1 : total), 0);
         points[i] = nbrOfDices * (i + 1);
-        savePlayerPoints();
-        setNbrOfThrowsLeft(3);
+        setNbrOfThrowsLeft(NBR_OF_THROWS);
         resetDices();
       }
       else {
@@ -249,6 +272,38 @@ export default Gameboard = ({ navigation, route }) => {
     }
   }
 
+  useEffect(() => {
+    const currentPoints = dicePointsTotal.reduce((total, points) => total + points, 0);
+    setOgPoints(currentPoints);
+
+    if (currentPoints > BONUS_POINTS_LIMIT) {
+      setBonus(true);
+      setTotalPoints(currentPoints + BONUS_POINTS)
+
+    } else {
+      setBonus(false);
+      setTotalPoints(currentPoints)
+    }
+
+    if(hasGameEnded){ 
+      savePlayerPoints();
+    }
+
+  }, [dicePointsTotal, hasGameEnded]);
+
+const getBestScore = (scores) => {
+  if (!Array.isArray(scores) || scores.length === 0) return 0; // Palauta 0, jos taulu on tyhjää
+  const best = scores.reduce((max, score) => {
+    const currentPoints = score.points.totalPoints !== undefined ? score.points.totalPoints : score.points; // Hae totalPoints tai käytä score.points suoraan
+    return currentPoints > max ? currentPoints : max; // Vertaile
+  }, 0); // Alkuperäinen maksimipiste
+  console.log('Paras:', best); // Tulosta paras pistemäärä
+  return best;
+};
+
+  useEffect(() => {
+    console.log('lololol Paras pistemäärä:', bestScore);
+  }, [bestScore]);
 
   return (
     <>
@@ -261,37 +316,45 @@ export default Gameboard = ({ navigation, route }) => {
         </Container>
         <Text>Throws left: {nbrOfThrowsLeft}</Text>
         <Text>{status}</Text>
-  
-        {/* Ehdollinen renderöinti pelin päättymiselle */}
-        {hasGameEnded ? (
-          <Text style={Gamestyles.buttontext}>Peli on päättynyt!</Text>
-        ) : (
-          <Pressable
-            style={Gamestyles.button}
-            onPress={() => throwDices()}
-          >
-            <Text style={Gamestyles.buttontext}>{throwsLeft ? 'Heitä noppia!' : 'Aseta pisteet!'}</Text>
-          </Pressable>
-        )}
-
-
+        <Pressable
+          style={[
+            Gamestyles.button,
+            (hasGameEnded || nbrOfThrowsLeft === 0) ? { opacity: 0.5 } : null, // Muuta tyyliä, jos peli on päättynyt tai heittoja ei ole jäljellä
+          ]}
+          onPress={() => {
+            if (!hasGameEnded) {
+              throwDices();
+            }
+          }}
+          disabled={hasGameEnded || nbrOfThrowsLeft === 0} // Estä nappi, jos peli on päättynyt
+        >
+          <Text style={Gamestyles.buttontext}>
+            {hasGameEnded
+              ? 'Peli on päättynyt!'
+              : (throwsLeft ? 'Heitä noppia!' : 'Aseta pisteet!')}</Text>
+        </Pressable>
         <Container>
           <Row>{pointsRow}</Row>
         </Container>
         <Container>
           <Row>{pointsToSelectedRow}</Row>
         </Container>
+        <Text>Pisteet: {ogPoints !== undefined ? ogPoints : 0}</Text>
+        <Text>Bonus: {bonus ? BONUS_POINTS : 0}</Text>
+        <Text>Kokonaispisteet: {totalPoints !== undefined ? totalPoints : 0}</Text>
+        <Text>Ennätys: {bestScore !== null ? bestScore : 0}</Text>
+
         {hasGameEnded && (
-        <Pressable
-          style={Gamestyles.button}
-          onPress={() => startNewGame()}
+          <Pressable
+            style={Gamestyles.button}
+            onPress={() => startNewGame()}
           >
             <Text style={Gamestyles.buttontext}>Aloita uusi peli!</Text>
           </Pressable>
-          )}
+        )}
       </View>
       <Footer />
     </>
   )
-  
+
 }
