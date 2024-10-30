@@ -21,7 +21,7 @@ export default StyleSheet.create({
         marginLeft: 8
     },
     icons: {
-        marginBottom: 40,
+        marginBottom: 20,
     },
     button: {
         backgroundColor: 'green',
@@ -43,11 +43,27 @@ export default StyleSheet.create({
     },
     pointtext: {
         fontSize: 16,
-        fontWeight:'bold'
+        fontWeight:'bold',
+        marginBottom: 3,
+        marginTop: 3,
     },
     pointtext2: {
         fontSize: 20,
         fontWeight:'bold',
         marginBottom: 20,
+    },
+    pointcontainer: {
+        borderWidth: 2,
+        marginBottom: 5,
+        borderRadius: 5,
+        backgroundColor: '#49ac7d',
+    },
+    pointcontainer2: {
+        borderWidth: 2,
+        borderRadius: 5,
+        backgroundColor: '#49ac7d'
+    },
+    scores: {
+        flexDirection: 'row'
     },
 });

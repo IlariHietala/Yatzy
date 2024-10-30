@@ -60,21 +60,21 @@ export default function Scoreboard() {
     <>
       <Header />
       <View>
-      <Pressable style={Scorestyles.button} onPress={clearScoreboard}>
-              <Text>Tyhjennä lista</Text>
-            </Pressable>
-            <FlatList
-        data={scores}
-        keyExtractor={(item, index) => index.toString()} // Voit käyttää item.key, jos se on ainutlaatuinen
-        renderItem={({ item }) => (
-          <View>
-            <Text>Nimi: {item.name}</Text>
-            <Text>Päivämäärä: {item.date}</Text>
-            <Text>Aika: {item.time}</Text>
-            <Text>Pisteet: {item.points ? (item.points.totalPoints || item.points) : 0}</Text>
-          </View>
-        )}
-      />
+        <Pressable style={Scorestyles.button} onPress={clearScoreboard}>
+          <Text>Tyhjennä lista</Text>
+        </Pressable>
+        <FlatList
+          data={scores}
+          keyExtractor={(item, index) => index.toString()} // Voit käyttää item.key, jos se on ainutlaatuinen
+          renderItem={({ item }) => (
+            <View>
+              <Text>Nimi: {item.name}</Text>
+              <Text>Päivämäärä: {item.date}</Text>
+              <Text>Aika: {item.time}</Text>
+              <Text>Pisteet: {item.points ? (item.points.totalPoints || item.points) : 0}</Text>
+            </View>
+          )}
+        />
       </View>
       <Footer />
     </>

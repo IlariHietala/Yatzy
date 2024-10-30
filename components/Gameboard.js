@@ -1,5 +1,5 @@
-import { useState, useEffect, useSyncExternalStore } from 'react';
-import { Text, View, Pressable } from 'react-native';
+import { useState, useEffect, useSyncExternalStore, useRef } from 'react';
+import { Animated, Text, View, Pressable, ScrollView } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Header from './Header';
 import Footer from './Footer';
@@ -17,6 +17,7 @@ import Gamestyles from '../style/Gamestyles';
 import { Container, Row, Col } from 'react-native-flex-grid';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+console.log
 
 let board = [];
 
@@ -32,12 +33,14 @@ export default Gameboard = ({ navigation, route }) => {
   const [selectedDicePoints, setSelectedDicePoints] = useState(new Array(MAX_SPOT).fill(0));   // Mitkä nopat valittu pisteisiin?
   const [dicePointsTotal, setDicePointsTotal] = useState(new Array(MAX_SPOT).fill(0));   // Valittujen noppien pistemäärä total
   const [scores, setScores] = useState([]);
-  const [bestScore, setBestScore] = useState(0);
   const [bonus, setBonus] = useState(false);
   const [ogPoints, setOgPoints] = useState(0);
   const [totalPoints, setTotalPoints] = useState(0);
   const DiceIcon = "\u{1F3B2}";
   const [hasGameNotStarted, setHasGameNotStarted] = useState(true);
+  const [topThreeScores, setTopThreeScores] = useState([0, 0, 0]);
+  const [playerNames, setPlayerNames] = useState([ ]);
+
 
   //Noppien reset
   const resetDices = () => {
@@ -56,7 +59,6 @@ export default Gameboard = ({ navigation, route }) => {
   }
 
 
-  // Pisteiden tallennus
   const savePlayerPoints = async () => {
     const newKey = Date.now();
     const playerPoints = {
@@ -64,41 +66,70 @@ export default Gameboard = ({ navigation, route }) => {
       name: playerName,
       date: new Date().toLocaleDateString(),
       time: new Date().toLocaleTimeString(),
-      points: totalPoints
+      points: totalPoints,
     };
-
+  
     try {
       const jsonValue = await AsyncStorage.getItem(SCOREBOARD_KEY);
       const existingScores = jsonValue !== null ? JSON.parse(jsonValue) : [];
       const newScore = [...existingScores, playerPoints];
-
+  
+      // Lajittele pisteet laskevassa järjestyksessä
+      newScore.sort((a, b) => (b.points.totalPoints || b.points) - (a.points.totalPoints || a.points));
+  
+      // Rajoita taulukon pituus 7:ään
+      if (newScore.length > 7) {
+        newScore.splice(7); // Poista ylimääräiset huonoimmat tulokset
+      }
+  
       await AsyncStorage.setItem(SCOREBOARD_KEY, JSON.stringify(newScore));
       setScores(newScore);
-
-      // Hae paras pistemäärä uudelleen nyt tallennettujen pisteiden joukosta
-      const bestScore = getBestScore(newScore);
-      setBestScore(bestScore); // Aseta paras pistemäärä UI:lle
-      console.log('Gameboard: Save successful:', JSON.stringify(newScore));
+  
+      // Hae parhaat pisteet
+      const bestScore = getTopThreeScores(newScore);
+      setTopThreeScores(bestScore.points); // Aseta parhaat pisteet
+      setPlayerNames(bestScore.names); // Aseta pelaajien nimet
+  
+      console.log('Gameboard: Save successful');
     } catch (e) {
       console.log('Gameboard: save error:', e);
     }
   };
+  
 
 
   // Luodaan nopparivi sarakkeittain (col)
   const dicesRow = [];
+
+  const rotationAnim = useRef(new Animated.Value(0)).current; // Animaation arvo
+
+  const rotateInterpolate = rotationAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['0deg', '360deg'],
+  });
+
+
   for (let dice = 0; dice < NBR_OF_DICES; dice++) {
     dicesRow.push(
       <Col key={"dice" + dice}>
         <Pressable
           key={"row" + dice}
           onPress={() => chosenDice(dice)}>
-          <MaterialCommunityIcons
-            name={board[dice]}
-            key={"row" + dice}
-            size={50}
-            color={getDiceColor(dice)}>
-          </MaterialCommunityIcons>
+          <Animated.View
+            style={{
+              transform: [
+                {
+                  rotate: selectedDices[dice] ? '0deg' : rotateInterpolate,
+                },
+              ],
+            }}>
+            <MaterialCommunityIcons
+              name={board[dice]}
+              key={"row" + dice}
+              size={50}
+              color={getDiceColor(dice)}>
+            </MaterialCommunityIcons>
+          </Animated.View>
         </Pressable>
       </Col>
     );
@@ -123,14 +154,13 @@ export default Gameboard = ({ navigation, route }) => {
       <Col key={"buttonsRow" + diceButton}>
         <Pressable
           key={"buttonsRow" + diceButton}
-          onPress={() => { chosenDicePoints(diceButton)}}>
+          onPress={() => { chosenDicePoints(diceButton) }}>
           <MaterialCommunityIcons
             name={"numeric-" + (diceButton + 1) + "-circle"}
             key={"buttonsRow" + diceButton}
             color={getDicePointsColor(diceButton)}
             style={Gamestyles.icon}
           >
-
           </MaterialCommunityIcons>
         </Pressable>
       </Col>
@@ -147,23 +177,58 @@ export default Gameboard = ({ navigation, route }) => {
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       getScoreBoardData();
+      getTopThreeScores();
+
     })
     return unsubscribe;
   }, [navigation])
 
+  const getTopThreeScores = (scores) => {
+    if (!Array.isArray(scores) || scores.length === 0) {
+      return { points: [0, 0, 0], names: ['', '', ''] }; // Palauta tyhjät tulokset ja nimet
+    }
+  
+    const allScores = scores.map(score => ({
+      points: score.points.totalPoints !== undefined ? score.points.totalPoints : score.points,
+      name: score.name,
+    }));
+  
+    const sortedScores = allScores.sort((a, b) => b.points - a.points);
+    const topThree = sortedScores.slice(0, 3);
+  
+    const topPoints = [];
+    const topNames = [];
+  
+    for (let i = 0; i < 3; i++) {
+      if (topThree[i]) {
+        topPoints.push(topThree[i].points);
+        topNames.push(topThree[i].name);
+      } else {
+        topPoints.push(0);
+        topNames.push('');
+      }
+    }
+  
+    return { points: topPoints, names: topNames };
+  };
+
   const getScoreBoardData = async () => {
     try {
       const jsonValue = await AsyncStorage.getItem(SCOREBOARD_KEY);
-      console.log('Tallennetut tiedot:', jsonValue); // Lisää tämä rivi
+
 
       if (jsonValue !== null) {
         const tmpScores = JSON.parse(jsonValue);
-        console.log('Tulokset:', tmpScores); // Tulosta taulukko
 
-        if (Array.isArray(tmpScores) && tmpScores.length > 0) {
-          const bestScore = getBestScore(tmpScores);
-          console.log('Asetetaan paras pistemäärä:', bestScore); // Tulosta paras pistemäärä
-          setBestScore(bestScore);
+
+      if (Array.isArray(tmpScores) && tmpScores.length > 0) {
+        // Hae kolme parasta pistemäärää ja niiden nimet
+        const { points: topThreeScores, names: topThreeNames } = getTopThreeScores(tmpScores);
+        
+        console.log('Asetetaan paras pistemäärä:', topThreeScores); // Tulosta parhaat pistemäärät
+        setTopThreeScores(topThreeScores); // Aseta kolme parasta pistemäärää
+
+        setPlayerNames(topThreeNames); // Aseta pelaajien nimet
         }
       } else {
         console.log('Ei tallennettuja tietoja löytynyt.');
@@ -230,6 +295,18 @@ export default Gameboard = ({ navigation, route }) => {
       return;
     }
 
+
+    // Aloita pyöritysanimaatio
+    Animated.timing(rotationAnim, {
+      toValue: 2, // 360 astetta
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      // Resetoi arvo takaisin nollaan animaation jälkeen
+      rotationAnim.setValue(0);
+    });
+
+
     let spots = [...diceSpots];
     for (let i = 0; i < NBR_OF_DICES; i++) {
       if (!selectedDices[i]) {
@@ -246,7 +323,10 @@ export default Gameboard = ({ navigation, route }) => {
     } else {
       setStatus("No throws left. Select points."); // Jos heittoja ei enää ole, asetetaan tämä viesti
     }
+
   };
+
+
 
   // Heittoja jäljellä + pistelasku
   const chosenDicePoints = (i) => {
@@ -290,36 +370,31 @@ export default Gameboard = ({ navigation, route }) => {
 
     if (hasGameEnded) {
       savePlayerPoints();
+      getScoreBoardData();
+      getTopThreeScores();
     }
 
   }, [dicePointsTotal, hasGameEnded]);
 
-  const getBestScore = (scores) => {
-    if (!Array.isArray(scores) || scores.length === 0) return 0; // Palauta 0, jos taulu on tyhjää
-    const best = scores.reduce((max, score) => {
-      const currentPoints = score.points.totalPoints !== undefined ? score.points.totalPoints : score.points; // Hae totalPoints tai käytä score.points suoraan
-      return currentPoints > max ? currentPoints : max; // Vertaile
-    }, 0); // Alkuperäinen maksimipiste
-    console.log('Paras:', best); // Tulosta paras pistemäärä
-    return best;
-  };
 
-  useEffect(() => {
-    console.log('lololol Paras pistemäärä:', bestScore);
-  }, [bestScore]);
+
+
 
   // Funktio, joka tarkistaa, ovatko kaikki nopat saman arvoisia
   const areAllDicesSameValue = () => {
     const firstValue = diceSpots[0]; // Oletetaan, että taulukko ei ole tyhjää
-   
-    if(hasGameNotStarted) {
-    return diceSpots.every(value => value === firstValue);
-  }
+
+    if (hasGameNotStarted) {
+      return diceSpots.every(value => value === firstValue);
+    }
   };
 
   const startGame = () => {
     setHasGameNotStarted(false)
   };
+
+  // const topThreeScores = getTopThreeScores(scores); // Oletetaan, että 'scores' on käytettävissä
+
 
   return (
     <>
@@ -337,6 +412,7 @@ export default Gameboard = ({ navigation, route }) => {
         {!hasGameEnded && (
           <Text style={Gamestyles.infotext}>Throws left: {nbrOfThrowsLeft}</Text>
         )}
+        <ScrollView>
         <Text style={Gamestyles.infotext2}>{status}</Text>
         <Pressable
           style={[
@@ -362,11 +438,11 @@ export default Gameboard = ({ navigation, route }) => {
         <Container>
           <Row style={Gamestyles.icons}>{pointsToSelectedRow}</Row>
         </Container>
-        <Text style={Gamestyles.pointtext}>Pisteet: {ogPoints !== undefined ? ogPoints : 0}</Text>
-        <Text style={Gamestyles.pointtext}>Bonus: {bonus ? BONUS_POINTS : 0}</Text>
-        <Text style={Gamestyles.pointtext2}>Kokonaispisteet: {totalPoints !== undefined ? totalPoints : 0}</Text>
-        <Text style={Gamestyles.pointtext}>Ennätys: {bestScore !== null ? bestScore : 0}</Text>
-
+        <View style={Gamestyles.pointcontainer}>
+          <Text style={Gamestyles.pointtext}>Pisteet: {ogPoints !== undefined ? ogPoints : 0}</Text>
+          <Text style={Gamestyles.pointtext}>Bonus: {bonus ? BONUS_POINTS : 0}</Text>
+          <Text style={Gamestyles.pointtext2}>Kokonaispisteet: {totalPoints !== undefined ? totalPoints : 0}</Text>
+        </View>
         {hasGameEnded && (
           <Pressable
             style={Gamestyles.button}
@@ -375,6 +451,22 @@ export default Gameboard = ({ navigation, route }) => {
             <Text style={Gamestyles.buttontext}>Aloita uusi peli!</Text>
           </Pressable>
         )}
+        <View style={Gamestyles.pointcontainer2}>
+          <Text>Palakinthoballi</Text>
+          <View style={Gamestyles.scores}>
+            <MaterialCommunityIcons name="crown" size={24} color="gold" />
+            <Text style={Gamestyles.pointtext}>{playerNames[0] || '----'}: {topThreeScores[0] !== undefined ? topThreeScores[0] : 0}</Text>
+          </View>
+          <View style={Gamestyles.scores}>
+            <MaterialCommunityIcons name="crown" size={24} color="silver" />
+            <Text style={Gamestyles.pointtext}>{playerNames[1] || '----'}: {topThreeScores[1] !== undefined ? topThreeScores[1] : 0}</Text>
+          </View>
+          <View style={Gamestyles.scores}>
+            <MaterialCommunityIcons name="crown" size={24} color="brown" />
+            <Text style={Gamestyles.pointtext}>{playerNames[2] || '----'}: {topThreeScores[2] !== undefined ? topThreeScores[2] : 0}</Text>
+          </View>
+        </View>
+        </ScrollView>
       </View>
       <Footer />
     </>
