@@ -7,8 +7,7 @@ export default StyleSheet.create({
         backgroundColor: '#fff'
       },
       header: {
-        marginTop: 30,
-        marginBottom: 15,
+        marginTop: 15,
         backgroundColor: '#49ac7d',
         flexDirection: 'row',
       },

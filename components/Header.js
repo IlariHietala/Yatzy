@@ -7,7 +7,7 @@ export default Header = () => {
   return (
     <View style={Headerstyles.header}>
       <Text style={Headerstyles.title}>
-        Noppapeli
+        Nice Dice
       </Text>
     </View>
   )

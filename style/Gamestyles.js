@@ -8,6 +8,7 @@ export default StyleSheet.create({
     starticon: {
         justifyContent: 'center',
         alignItems: 'center',
+        marginVertical: 10,
     },
 
     icon: {
@@ -21,7 +22,7 @@ export default StyleSheet.create({
         marginLeft: 8
     },
     icons: {
-        marginBottom: 20,
+        marginBottom: 10,
     },
     button: {
         backgroundColor: 'green',
@@ -29,7 +30,9 @@ export default StyleSheet.create({
         borderRadius: 5,
         alignItems: 'center',
         justifyContent: 'center',
-        margin: 10
+        marginLeft: 10,
+        marginRight: 10,
+        marginBottom: 10,
     },
     buttontext: {
         fontSize: 24,

@@ -35,12 +35,12 @@ export default Home = ({ navigation }) => {
                 <MaterialCommunityIcons name="information" size={90} color={'green'} />
                 {!hasPlayerName ?
                     <>
-                        <Text>Anna käyttäjänimi:</Text>
-                        <TextInput onChangeText={setPlayerName} autoFocus={true}></TextInput>
+                        <Text>Select username:</Text>
+                        <TextInput style={Homestyles.name} onChangeText={setPlayerName} autoFocus={true}></TextInput>
                         <Pressable
                             onPress={() => handlePlayerName(playerName)}
-                            style={{ padding: 10, backgroundColor: '#49ac7d' }}>
-                            <Text>OKKE</Text>
+                            style={{ padding: 13, backgroundColor: '#49ac7d', borderRadius: 5 }}>
+                            <Text style={Homestyles.boldText}>OK!</Text>
                         </Pressable>
                     </>
                     :
