@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Text, View, Pressable, TextInput, Keyboard } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { Text, View, Pressable, TextInput, Keyboard, ActivityIndicator } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Header from './Header';
 import Footer from './Footer';
@@ -14,10 +14,12 @@ import {
     SCOREBOARD_KEY
 } from '../constants/Game.js';
 import Homestyles from '../style/Homestyles';
+import { useFont } from '../style/FontProvider.js';
 
 
 export default Home = ({ navigation }) => {
 
+    const { Lato_400Regular, Lato_700Bold } = useFont(); // käytetään ladattuja fontteja
     const [playerName, setPlayerName] = useState('');
     const [hasPlayerName, setHasPlayerName] = useState(false)
 
@@ -35,7 +37,7 @@ export default Home = ({ navigation }) => {
                 <MaterialCommunityIcons name="information" size={90} color={'green'} />
                 {!hasPlayerName ?
                     <>
-                        <Text>Select username:</Text>
+                        <Text style={Homestyles.username}>Select username:</Text>
                         <TextInput style={Homestyles.name} onChangeText={setPlayerName} autoFocus={true}></TextInput>
                         <Pressable
                             onPress={() => handlePlayerName(playerName)}

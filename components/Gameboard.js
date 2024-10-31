@@ -1,5 +1,5 @@
-import { useState, useEffect, useSyncExternalStore, useRef } from 'react';
-import { Animated, Text, View, Pressable, ScrollView } from 'react-native';
+import React, { useState, useEffect, useSyncExternalStore, useRef } from 'react';
+import { Animated, Text, View, Pressable, ScrollView, ActivityIndicator } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Header from './Header';
 import Footer from './Footer';
@@ -16,6 +16,7 @@ import {
 import Gamestyles from '../style/Gamestyles';
 import { Container, Row, Col } from 'react-native-flex-grid';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFont } from '../style/FontProvider.js';
 
 console.log
 
@@ -23,6 +24,7 @@ let board = [];
 
 export default Gameboard = ({ navigation, route }) => {
 
+  const { Lato_400Regular, Lato_700Bold } = useFont(); // käytetään ladattuja fontteja
   const [nbrOfThrowsLeft, setNbrOfThrowsLeft] = useState(NBR_OF_THROWS); //Heittokertoja jäljellä
   const [throwsLeft, setThrowsLeft] = useState(true); //Onko heittoja jäljellä?
   const [status, setStatus] = useState('Throw dices.');
@@ -419,9 +421,9 @@ export default Gameboard = ({ navigation, route }) => {
           <Text style={Gamestyles.infotext}>Throws left: {nbrOfThrowsLeft}</Text>
         )}
         <ScrollView>
-        {!hasGameEnded && (
-          <Text style={Gamestyles.infotext2}>{status}</Text>
-        )}
+          {!hasGameEnded && (
+            <Text style={Gamestyles.infotext2}>{status}</Text>
+          )}
           <Pressable
             style={[
               Gamestyles.button,
@@ -456,11 +458,11 @@ export default Gameboard = ({ navigation, route }) => {
               style={Gamestyles.button}
               onPress={() => startNewGame()}
             >
-              <Text style={Gamestyles.buttontext}>Start new game!</Text>
+              <Text style={Gamestyles.buttontext}>PLAY AGAIN!</Text>
             </Pressable>
           )}
           <View style={Gamestyles.pointcontainer2}>
-            <Text style={Gamestyles.pointtext}>Hiscores!</Text>
+            <Text style={Gamestyles.pointtext3}>Hiscores!</Text>
             <View style={Gamestyles.scores}>
               <MaterialCommunityIcons name="crown" size={24} color="gold" />
               <Text style={Gamestyles.pointtext}>{playerNames[0] || '----'}: {topThreeScores[0] !== undefined ? topThreeScores[0] : 0}</Text>

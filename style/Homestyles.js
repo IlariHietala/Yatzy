@@ -8,28 +8,33 @@ export default StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
+    username: {
+        fontSize: 18,
+        fontFamily: 'Lato_700Bold',
+    },
     mainText: {
         fontSize: 14,
         lineHeight: 24, // Parantaa luettavuutta
         color: '#333', // Tummanharmaa teksti
-        marginHorizontal: 5
+        marginHorizontal: 5,
+        fontFamily: 'Lato_400Regular',
     },
     boldText: {
-        fontWeight: 'bold',
+        fontFamily: 'Lato_700Bold',
         color: '#000', // Musta teksti
     },
     highlight: {
         color: '#007bff', // Sininen korostusväri
-        fontWeight: 'bold',
+        fontFamily: 'Lato_700Bold',
     },
     goodLuckText: {
         fontSize: 20,
-        fontWeight: 'bold',
+        fontFamily: 'Lato_700Bold',
         color: '#28a745', // Vihreä väri
     },
     rules: {
         fontSize: 20,
-        fontWeight: 'bold,'
+        fontFamily: 'Lato_700Bold',
     },
     button: {
         backgroundColor: 'green',
@@ -41,10 +46,12 @@ export default StyleSheet.create({
     },
     buttontext: {
         fontSize: 24,
+        fontFamily: 'Lato_700Bold',
     },
     name: {
         padding: 10,
         fontSize: 18,
+        fontFamily: 'Lato_400Regular',
         borderWidth: 1,
         borderColor: '#cccccc',
         borderRadius: 5,

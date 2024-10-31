@@ -26,7 +26,7 @@ export default StyleSheet.create({
     },
     button: {
         backgroundColor: 'green',
-        padding: 10,
+        paddingVertical: 10,
         borderRadius: 5,
         alignItems: 'center',
         justifyContent: 'center',
@@ -36,23 +36,30 @@ export default StyleSheet.create({
     },
     buttontext: {
         fontSize: 24,
+        fontFamily: 'Lato_700Bold',
     },
     infotext: {
         fontSize: 16,
+        fontFamily: 'Lato_400Regular',
     },
     infotext2: {
-        fontWeight: 'bold',
+        fontFamily: 'Lato_700Bold',
         fontSize: 20,
     },
     pointtext: {
-        fontSize: 16,
-        fontWeight:'bold',
+        fontSize: 18,
         marginBottom: 3,
         marginTop: 3,
+        fontWeight: 'bold'
     },
     pointtext2: {
         fontSize: 20,
-        fontWeight:'bold',
+        fontWeight: 'bold',
+        marginBottom: 20,
+    },
+    pointtext3: {
+        fontSize: 24,
+        fontFamily: 'Lato_700Bold',
         marginBottom: 20,
     },
     pointcontainer: {
@@ -67,6 +74,7 @@ export default StyleSheet.create({
         backgroundColor: '#49ac7d'
     },
     scores: {
-        flexDirection: 'row'
+        flexDirection: 'row',
+
     },
 });

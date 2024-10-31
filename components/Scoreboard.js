@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Text, View, Pressable, FlatList } from 'react-native';
+import { Text, View, Pressable, FlatList, ActivityIndicator } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Header from './Header';
 import Footer from './Footer';
@@ -7,11 +7,10 @@ import Scorestyles from '../style/Scorestyles';
 import { SCOREBOARD_KEY } from '../constants/Game';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-
-
+import { useFont } from '../style/FontProvider.js';
 
 export default function Scoreboard() {
-
+  const { Lato_400Regular, Lato_700Bold } = useFont(); // käytetään ladattuja fontteja
   const [scores, setScores] = useState([]);
   const navigation = useNavigation();
 
@@ -30,7 +29,7 @@ export default function Scoreboard() {
         const tmpScores = JSON.parse(jsonValue); // Oikea tapa jäsentää JSON
         // Lajittelu pistemäärän perusteella
         if (Array.isArray(tmpScores)) {
-          tmpScores.sort((a, b) => b.points - a.totalPoints);
+          tmpScores.sort((a, b) => b.points.totalPoints - a.points.totalPoints);
           setScores(tmpScores);
           console.log('async getScoreBoardData toimii');
           console.log('Scores:', tmpScores.length);
@@ -49,34 +48,32 @@ export default function Scoreboard() {
     try {
       await AsyncStorage.removeItem(SCOREBOARD_KEY);
       setScores([]);
+    } catch (e) {
+      console.log("SCOREBOARD error @clearscoreboard");
     }
-    catch (e) {
-      console.log("SCOREBOARD error @clearscoreboard")
-    }
-  }
-
+  };
 
   return (
     <>
       <Header />
-      <View>
+      <View style={Scorestyles.container}>
         <Pressable style={Scorestyles.button} onPress={clearScoreboard}>
-          <Text>Tyhjennä lista</Text>
+          <Text style={Scorestyles.clearButtonText}>Tyhjennä lista</Text>
         </Pressable>
         <FlatList
           data={scores}
           keyExtractor={(item, index) => index.toString()} // Voit käyttää item.key, jos se on ainutlaatuinen
           renderItem={({ item }) => (
-            <View>
-              <Text>Nimi: {item.name}</Text>
-              <Text>Päivämäärä: {item.date}</Text>
-              <Text>Aika: {item.time}</Text>
-              <Text>Pisteet: {item.points ? (item.points.totalPoints || item.points) : 0}</Text>
+            <View style={Scorestyles.scoreCard}>
+              <Text style={Scorestyles.scoreHeader}>Nimi: {item.name}</Text>
+              <Text style={Scorestyles.scoreText}>Päivämäärä: {item.date}</Text>
+              <Text style={Scorestyles.scoreText}>Aika: {item.time}</Text>
+              <Text style={Scorestyles.scoreText}>Pisteet: {item.points.totalPoints || item.points}</Text>
             </View>
           )}
         />
       </View>
       <Footer />
     </>
-  )
+  );
 }
